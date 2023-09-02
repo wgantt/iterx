@@ -10,12 +10,12 @@ local definition_path = "resources/data/muc/definitions.json";
 local vocabulary_path = "resources/data/muc/vocabulary";
 
 # Gold data for training and evaluation
-local train_data_path = "resources/data/muc/preprocessed/tokenized/train.json";
-local dev_data_path = "resources/data/muc/preprocessed/tokenized/dev.json";
-local test_data_path = "resources/data/muc/preprocessed/tokenized/test.json";
+local train_data_path = "resources/data/muc/en/tokenized/train.json";
+local dev_data_path = "resources/data/muc/en/tokenized/dev.json";
+local test_data_path = "resources/data/muc/en/tokenized/test.json";
 
-local dev_gold_path = "resources/data/muc/preprocessed/untokenized/dev.json";
-local test_gold_path = "resources/data/muc/preprocessed/untokenized/test.json";
+local dev_gold_path = "resources/data/muc/en/untokenized/dev.json";
+local test_gold_path = "resources/data/muc/en/untokenized/test.json";
 
 # Model configs
 local lexical_dropout = 0.2;
