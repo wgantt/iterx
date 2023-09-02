@@ -157,6 +157,7 @@ local model = {
         [[".*transformer.*"], {"lr": 1e-5}]
       ]
     },
+    "cuda_device": 0
     # Uncomment if logging to Tensorboard
     # "callbacks": [
     #  {

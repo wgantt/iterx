@@ -8,7 +8,7 @@ from allennlp.training.metrics.metric import Metric
 from scipy.optimize import linear_sum_assignment
 
 
-@Metric.register("conll_coref_scores")
+@Metric.register("conll_coref_scores_mod")
 class ConllCorefScores(Metric):
     """"This script is adopted from allennlp-models."""
     supports_distributed = True
