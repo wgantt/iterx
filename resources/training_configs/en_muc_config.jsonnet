@@ -10,9 +10,9 @@ local definition_path = "resources/data/muc/definitions.json";
 local vocabulary_path = "resources/data/muc/vocabulary";
 
 # Gold data for training and evaluation
-local train_data_path = "resources/data/muc/en/tokenized/train.json";
-local dev_data_path = "resources/data/muc/en/tokenized/dev.json";
-local test_data_path = "resources/data/muc/en/tokenized/test.json";
+local train_data_path = "resources/data/muc/en/tokenized-merged/train.json";
+local dev_data_path = "resources/data/muc/en/sf-outputs/dev.json";
+local test_data_path = "resources/data/muc/en/sf-outputs/test.json";
 
 local dev_gold_path = "resources/data/muc/en/untokenized/dev.json";
 local test_gold_path = "resources/data/muc/en/untokenized/test.json";
@@ -60,7 +60,7 @@ local initializer = {
 local metrics = {
   muc: {
     type: "iterx_muc",
-    ignore_no_template_doc: true,
+    ignore_no_template_doc: false,
     sanitize_special_chars: true,
     doc_path: {
       [dev_data_path]: dev_gold_path
@@ -120,7 +120,7 @@ local model = {
   "dataset_reader": gen_dataset_reader(true, true, false), 
   # is_training: false; skip_docs_without_spans: true; skip_docs_without_templates: true
   # NOTE: if you wish to evaluate on documents with *no* templates, this setting must be changed
-  "validation_dataset_reader": gen_dataset_reader(false, true, true),
+  "validation_dataset_reader": gen_dataset_reader(false, true, false),
   "train_data_path": train_data_path,
   "validation_data_path": dev_data_path,
   "test_data_path": test_data_path,
@@ -141,6 +141,7 @@ local model = {
   "trainer": {
     "num_epochs": 150, # originally 500
     "patience" : 30, # originally 50
+    "num_gradient_accumulation_steps": 6,
     "validation_metric": "+iterx_muc_slot_f1",
     "grad_norm": 1.0,
     "learning_rate_scheduler": {
