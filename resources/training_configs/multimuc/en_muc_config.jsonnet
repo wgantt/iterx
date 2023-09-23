@@ -1,7 +1,7 @@
 # Contextualized encoder configs
 
-local transformer_model = "t5-large";
-local transformer_dim = 1024;
+local transformer_model = "google/mt5-base";
+local transformer_dim = 768; # 1024 for regular T5
 
 local max_length = 1024;
 
@@ -10,7 +10,8 @@ local definition_path = "resources/data/muc/definitions.json";
 local vocabulary_path = "resources/data/muc/vocabulary";
 
 # Gold data for training and evaluation
-local train_data_path = "resources/data/muc/en/tokenized-merged/train.json";
+# local train_data_path = "resources/data/muc/en/tokenized-merged/train.json";
+local train_data_path = "resources/data/muc/en/tokenized/train.json";
 local dev_data_path = "resources/data/muc/en/sf-outputs/dev.json";
 local test_data_path = "resources/data/muc/en/sf-outputs/test.json";
 
