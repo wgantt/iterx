@@ -1,11 +1,10 @@
 # Contextualized encoder configs
 
 local transformer_model = "google/mt5-base";
-local transformer_dim = 768; # 768 for T5-base or mT5-base
-# local transformer_dim = 1024; # 1024 for regular T5 or mT5
+local transformer_dim = 768; # 1024 for regular T5
 
-local language = "ko";
-local language_to_file_prefix = {
+local language = "zh";
+local language_to_file_prefix1 = {
   "ar": "ara",
   "fa": "fas",
   "ko": "kor",
@@ -13,7 +12,16 @@ local language_to_file_prefix = {
   "zh": "zho"
 };
 
-local data_path = "/brtx/601-nvme1/wgantt/multimuc/data/annotations/" + language + "/json";
+local language_to_file_prefix2 = {
+  "ar": "ara_Arab",
+  "fa": "fas",
+  "ko": "kor",
+  "ru": "rus",
+  "zh": "zho_Hans"
+};
+
+local silver_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/updated_sent/silver_data/";
+local annotations_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/annotations/" + language + "/json";
 
 local max_length = 1024;
 
@@ -21,14 +29,16 @@ local max_length = 1024;
 local definition_path = "resources/data/muc/definitions.json";
 local vocabulary_path = "resources/data/muc/vocabulary";
 
-# Gold data for training and evaluation
-local train_data_path = data_path + "/tokenized/" + language_to_file_prefix[language] + "_train_run1.agg.filtered.json";
-local dev_data_path = data_path + "/sf-outputs/mono_corrected/" + language + "/" + language_to_file_prefix[language] + "_dev_run1.agg.filtered.json";
-local test_data_path = data_path + "/sf-outputs/mono_corrected/" + language + "/" + language_to_file_prefix[language] + "_test_run1.agg.filtered.json";
+# Use silver data for training
+local train_data_path = silver_data_path + "/tokenized/" + language_to_file_prefix2[language] + ".silver-train.json";
 
-# dev and test are the same for all data configurations
-local dev_gold_path = data_path + "/untokenized/" + language_to_file_prefix[language] + "_dev_run1.agg.filtered.json";
-local test_gold_path = data_path + "/untokenized/" + language_to_file_prefix[language] + "_test_run1.agg.filtered.json";
+# Use predicted spans on annotated dev and test data
+local dev_data_path = annotations_data_path + "/sf-outputs/mono_uncorrected/" + language + "/" + language_to_file_prefix1[language] + "_dev_run1.agg.filtered.json";
+local test_data_path = annotations_data_path + "/sf-outputs/mono_uncorrected/" + language + "/" + language_to_file_prefix1[language] + "_test_run1.agg.filtered.json";
+
+# Evaluate against annotated dev and test data with gold spans
+local dev_gold_path = annotations_data_path + "/untokenized/" + language_to_file_prefix1[language] + "_dev_run1.agg.filtered.json";
+local test_gold_path = annotations_data_path + "/untokenized/" + language_to_file_prefix1[language] + "_test_run1.agg.filtered.json";
 
 # Model configs
 local lexical_dropout = 0.2;

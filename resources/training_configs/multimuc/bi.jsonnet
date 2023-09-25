@@ -24,15 +24,15 @@ local vocabulary_path = "resources/data/muc/vocabulary";
 # Gold data for training and evaluation
 # local train_data_path = data_path + "/tokenized-merged/train.json";
 local train_data_path = {
-  "en": en_data_path + "/tokenized/en/train.json",
+  "en": en_data_path + "/tokenized-merged/en/train.json",
   "tgt": tgt_data_path + "/tokenized/" + language_to_file_prefix[language] + "_train_run1.agg.filtered.json"
 };
 local dev_data_path = tgt_data_path + "/sf-outputs/mono_corrected/" + language + "/" + language_to_file_prefix[language] + "_dev_run1.agg.filtered.json";
 local test_data_path = tgt_data_path + "/sf-outputs/mono_corrected/" + language + "/" + language_to_file_prefix[language] + "_test_run1.agg.filtered.json";
 
 # dev and test are the same for all data configurations
-local dev_gold_path = tgt_data_path + "/untokenized/" + language_to_file_prefix[language] + "_dev_run1.agg.json";
-local test_gold_path = tgt_data_path + "/untokenized/" + language_to_file_prefix[language] + "_test_run1.agg.json";
+local dev_gold_path = tgt_data_path + "/untokenized/" + language_to_file_prefix[language] + "_dev_run1.agg.filtered.json";
+local test_gold_path = tgt_data_path + "/untokenized/" + language_to_file_prefix[language] + "_test_run1.agg.filtered.json";
 
 # Model configs
 local lexical_dropout = 0.2;
