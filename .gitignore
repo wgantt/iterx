@@ -1,5 +1,9 @@
 # python
 __pycache__
 
+# project-specific
+resources/data/muc/en
+
 # other
 .lock
+.vscode
