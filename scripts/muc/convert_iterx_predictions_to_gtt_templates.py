@@ -15,7 +15,7 @@ def convert_to_gtt_templates(gold_file: str, pred_file: str, output_file: str) -
             parsed_line = json.loads(line.strip())
             gold[parsed_line["docid"]] = parsed_line
     gold_templates = read_gold_templates(
-        gold_file, convert_doc_id=False, sanitize_special_chars=False
+        gold_file, convert_doc_id=False, sanitize_special_chars=True
     )
     pred_templates = jsonlines_to_gtt_templates(
         pred_file, dedup=False, cluster_substr=False, normalize_role=True
@@ -35,8 +35,8 @@ def convert_to_gtt_templates(gold_file: str, pred_file: str, output_file: str) -
     print(
         f"Total templates missing from predictions: {templates_missing_from_predictions}"
     )
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
+    with open(output_file, "w") as f:
+        json.dump(output, f, indent=2)
 
 
 if __name__ == "__main__":
