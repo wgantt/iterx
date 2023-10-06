@@ -3,7 +3,7 @@
 local transformer_model = "google/mt5-base";
 local transformer_dim = 768; # 1024 for regular T5
 
-local language = "zh";
+local language = "ar";
 local language_to_file_prefix1 = {
   "ar": "ara",
   "fa": "fas",
@@ -20,7 +20,8 @@ local language_to_file_prefix2 = {
   "zh": "zho_Hans"
 };
 
-local silver_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/updated_sent/silver_data/";
+# local silver_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/updated_sent/silver_data/tokenized-merged/mono_uncorrected/" + language + "/";
+local silver_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/updated_sent/silver_data";
 local annotations_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/annotations/" + language + "/json";
 
 local max_length = 1024;
@@ -30,14 +31,14 @@ local definition_path = "resources/data/muc/definitions.json";
 local vocabulary_path = "resources/data/muc/vocabulary";
 
 # Use silver data for training
-local train_data_path = silver_data_path + "/tokenized/" + language_to_file_prefix2[language] + ".silver-train.json";
+local train_data_path = silver_data_path + language_to_file_prefix2[language] + ".silver-train.json";
 
 # Use predicted spans on annotated dev and test data
-local dev_data_path = annotations_data_path + "/sf-outputs/mono_uncorrected/" + language + "/" + language_to_file_prefix1[language] + "_dev_run1.agg.filtered.json";
+local dev_data_path = silver_data_path + "/sf-outputs/mono_uncorrected/" + language + "/" + language_to_file_prefix2[language] + ".silver-dev.json";
 local test_data_path = annotations_data_path + "/sf-outputs/mono_uncorrected/" + language + "/" + language_to_file_prefix1[language] + "_test_run1.agg.filtered.json";
 
 # Evaluate against annotated dev and test data with gold spans
-local dev_gold_path = annotations_data_path + "/untokenized/" + language_to_file_prefix1[language] + "_dev_run1.agg.filtered.json";
+local dev_gold_path = silver_data_path + "/untokenized/" + language_to_file_prefix2[language] + ".silver-dev.json";
 local test_gold_path = annotations_data_path + "/untokenized/" + language_to_file_prefix1[language] + "_test_run1.agg.filtered.json";
 
 # Model configs
@@ -193,6 +194,7 @@ local model = {
     # required if using BART as the encoder
     # "run_confidence_checks": false
   },
+  "evaluate_on_test": true
   # Uncomment if logging to Tensorboard
   # "callbacks": [
   # {
