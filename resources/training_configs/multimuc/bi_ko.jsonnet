@@ -12,7 +12,7 @@ local language_to_file_prefix = {
   "zh": "zho"
 };
 
-local en_data_path = "/brtx/601-nvme1/wgantt/iterx/resources/data/muc/en/tokenized-merged/";
+local en_data_path = "/brtx/601-nvme1/wgantt/iterx/resources/data/muc/en/tokenized/";
 local tgt_data_path = "/brtx/601-nvme1/wgantt/multimuc/data/annotations/" + language + "/json";
 
 local max_length = 1024;

@@ -31,7 +31,7 @@ local vocabulary_path = "resources/data/muc/vocabulary";
 
 # Use silver data for training
 # local train_data_path = silver_data_path + "/tokenized-merged/mono_uncorrected/" + language + "/" + language_to_file_prefix2[language] + ".silver-train.json";
-local train_data_path = silver_data_path = "/tokenized/" + language_to_file_prefix2[language] + ".silver-train.json";
+local train_data_path = silver_data_path + "/tokenized/" + language_to_file_prefix2[language] + ".silver-train.json";
 
 # Use predicted spans on annotated dev and test data
 local dev_data_path = silver_data_path + "/sf-outputs/mono_uncorrected/" + language + "/" + language_to_file_prefix2[language] + ".silver-dev.json";
