@@ -30,20 +30,26 @@ def score(
         file_type: Annotated[PredictionFileType, typer.Option(
             help='The type of the prediction file.'
         )] = PredictionFileType.IterX,
+        remove_span_whitespace: Annotated[bool, typer.Option(
+			help='Whether to concatenate all the spans in a mention to form a single span.'
+        )] = False,
 ):
     """Score a prediction file against a reference file."""
     normalize_role = True if dataset == DatasetKind.MUC else False
+    convert_doc_id = True if file_type == PredictionFileType.GTT and dataset == DatasetKind.MUC else False
     # SciREX postprocessing should have been moved out of the scorer.
     predictions = load_predictions(pred_file=pred_file,
                                    dataset=dataset,
                                    file_type=file_type,
                                    normalize_role=normalize_role,
+                                   remove_span_whitespace=remove_span_whitespace,
                                    scirex_merge_mentions=scirex_merge_mentions)
     metric = load_metric(dataset_kind=dataset,
                          doc_path={str(pred_file): str(ref_file)},
                          ignore_no_template_doc=ignore_no_template_doc,
                          sanitize_special_chars=sanitize_special_chars,
-                         scorer_type=scorer)
+                         scorer_type=scorer,
+                         convert_doc_id=convert_doc_id)
 
     metric(
         predictions=predictions,

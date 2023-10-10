@@ -29,16 +29,21 @@ for lang in "${LANGS[@]}"; do
 	  $CHECKPOINTS_DIR/$setting/$lang/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json \
 	  $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json \
 	  $OUTPUT_DIR/$setting/$lang/preds_iterx.out
+	echo '-----------------------'
+	echo $lang $setting 'RME'
+	echo '-----------------------'
+	PYTHONPATH=./src python scripts/ceaf-scorer.py score --dataset MUC $OUTPUT_DIR/$setting/$lang/preds_iterx.out $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json --file-type GTT | tee $OUTPUT_DIR/$setting/$lang/eval_iterx_ceaf_rme.out
+
 	
-	echo '-------------------'
-	echo $lang $setting
-	echo '-------------------'
+	echo '-----------------------'
+	echo $lang $setting 'REE'
+	echo '-----------------------'
 	cd $GTT_DIR
 	conda activate gtt
 	if [ $lang == "zh" ]; then
-	  python eval.py --pred_file $OUTPUT_DIR/$setting/$lang/preds_iterx.out --gold_file $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json --chinese
+	  python eval.py --pred_file $OUTPUT_DIR/$setting/$lang/preds_iterx.out --gold_file $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json --chinese | tee $OUTPUT_DIR/$setting/$lang/eval_iterx_ceaf_ree.out
 	else
-	  python eval.py --pred_file $OUTPUT_DIR/$setting/$lang/preds_iterx.out --gold_file $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json
+	  python eval.py --pred_file $OUTPUT_DIR/$setting/$lang/preds_iterx.out --gold_file $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json | tee $OUTPUT_DIR/$setting/$lang/eval_iterx_ceaf_ree.out
 	fi
 	conda deactivate
   done

@@ -13,14 +13,21 @@ Slightly modified to be able to process IL model outputs.
 """
 
 tag2role = OrderedDict(
-    {'incident_type': 'incident_type', 'perp_individual_id': "PerpInd", 'perp_organization_id': "PerpOrg",
-     'phys_tgt_id': "Target", 'hum_tgt_name': "Victim", 'incident_instrument_id': "Weapon"})
+    {
+        "incident_type": "incident_type",
+        "perp_individual_id": "PerpInd",
+        "perp_organization_id": "PerpOrg",
+        "phys_tgt_id": "Target",
+        "hum_tgt_name": "Victim",
+        "incident_instrument_id": "Weapon",
+    }
+)
 role2uppercase = {
-    'perpind': 'PerpInd',
-    'perporg': 'PerpOrg',
-    'target': 'Target',
-    'victim': 'Victim',
-    'weapon': 'Weapon'
+    "perpind": "PerpInd",
+    "perporg": "PerpOrg",
+    "target": "Target",
+    "victim": "Victim",
+    "weapon": "Weapon",
 }
 
 DOCIDS_BY_NUMBER_OF_TEMPLATES = "resources/data/muc/docids_event_n.json"
@@ -43,11 +50,14 @@ def cluster_substrings(spans: Set[str]) -> List[List[str]]:
     return list(clusters.values())
 
 
-def add_normalized_templates(curr_pred_templates: List[Dict[str, Any]],
-                             existing_pred_templates: OrderedDict[str, List[GTTTemplate]],
-                             dedup: bool = True,
-                             cluster_substr: bool = True,
-                             normalize_role: bool = True):
+def add_normalized_templates(
+    curr_pred_templates: List[Dict[str, Any]],
+    existing_pred_templates: OrderedDict[str, List[GTTTemplate]],
+    dedup: bool = True,
+    cluster_substr: bool = True,
+    normalize_role: bool = True,
+    remove_span_whitespace: bool = False,
+):
     """Function for converting IL-style templates to GTT's format
 
     Our outputs are in Jsonlines format, with one line per (document, template type) pair.
@@ -63,7 +73,7 @@ def add_normalized_templates(curr_pred_templates: List[Dict[str, Any]],
     :return: None (adds new templates directly to existing_pred_templates)
     """
     for pred_template in curr_pred_templates:
-        template_norm = {'incident_type': pred_template['incident_type']}
+        template_norm = {"incident_type": pred_template["incident_type"]}
         if normalize_role:
             to_iterate = role2uppercase.items()
         else:
@@ -81,7 +91,10 @@ def add_normalized_templates(curr_pred_templates: List[Dict[str, Any]],
             if role in pred_template:
                 if dedup:
                     # This assumes all fillers are singleton entities
-                    pred_fillers = {normalize_string(filler[0]) for filler in pred_template[role]}
+                    pred_fillers = {
+                        normalize_string(filler[0], remove_span_whitespace)
+                        for filler in pred_template[role]
+                    }
                     if cluster_substr:
                         pred_fillers = cluster_substrings(pred_fillers)
                     else:
@@ -96,11 +109,12 @@ def add_normalized_templates(curr_pred_templates: List[Dict[str, Any]],
 
 
 def jsonlines_to_gtt_templates(
-        file_path: str,
-        dedup: Optional[bool] = False,
-        cluster_substr: Optional[bool] = False,
-        normalize_role: Optional[bool] = False,
-        iteration_breakdown: Optional[int] = None
+    file_path: str,
+    dedup: Optional[bool] = False,
+    cluster_substr: Optional[bool] = False,
+    normalize_role: Optional[bool] = False,
+    remove_span_whitespace: Optional[bool] = False,
+    iteration_breakdown: Optional[int] = None,
 ) -> OrderedDict[str, List[GTTTemplate]]:
     """Converts Jsonlines-formatted file to a dictionary of GTT-style templates
 
@@ -122,29 +136,45 @@ def jsonlines_to_gtt_templates(
                     templates_to_add = []
                 else:
                     templates_to_add = [templates[iteration_breakdown]]
-            add_normalized_templates(templates_to_add, all_templates[docid], dedup, cluster_substr,
-                                     normalize_role=normalize_role)
+            add_normalized_templates(
+                templates_to_add,
+                all_templates[docid],
+                dedup,
+                cluster_substr,
+                normalize_role=normalize_role,
+                remove_span_whitespace=remove_span_whitespace,
+            )
     return all_templates
 
 
-def normalize_string(s):
+def normalize_string(s, remove_span_whitespace=False):
     """Lower text and remove punctuation, articles and extra whitespace."""
 
     def remove_articles(text):
-        regex = re.compile(r'\b(a|an|the)\b', re.UNICODE)
-        return re.sub(regex, ' ', text)
+        regex = re.compile(r"\b(a|an|the)\b", re.UNICODE)
+        return re.sub(regex, " ", text)
 
     def white_space_fix(text):
-        return ' '.join(text.split())
+        return " ".join(text.split())
 
     def remove_punc(text):
         exclude = set(string.punctuation)
-        return ''.join(ch for ch in text if ch not in exclude)
+        return "".join(ch for ch in text if ch not in exclude)
 
     def lower(text):
         return text.lower()
 
-    return white_space_fix(remove_articles(remove_punc(lower(s))))
+    def remove_whitespace(text):
+        return "".join(text.split())
+
+    if remove_span_whitespace:
+        return "".join(
+            remove_whitespace(
+                white_space_fix(remove_articles(remove_punc(lower(s))))
+            ).split()
+        )
+    else:
+        return white_space_fix(remove_articles(remove_punc(lower(s))))
 
 
 def f1(p_num, p_den, r_num, r_den, beta=1):
@@ -183,7 +213,15 @@ def score(mapping, pred, gold):
     ex_result = OrderedDict()
     all_keys = list(role for _, role in tag2role.items()) + ["micro_avg"]
     for key in all_keys:
-        ex_result[key] = {"p_num": 0, "p_den": 0, "r_num": 0, "r_den": 0, "p": 0, "r": 0, "f1": 0}
+        ex_result[key] = {
+            "p_num": 0,
+            "p_den": 0,
+            "r_num": 0,
+            "r_den": 0,
+            "p": 0,
+            "r": 0,
+            "f1": 0,
+        }
     # if invalid mapping, return 0
     # if not is_valid_mapping(mapping):
     #     return ex_result
@@ -194,8 +232,11 @@ def score(mapping, pred, gold):
         gold_temp_idx = mapping[pred_temp_idx]
         if not isinstance(pred[pred_temp_idx]["incident_type"], str):
             pred[pred_temp_idx]["incident_type"] = "attack"
-        if gold_temp_idx != -1 and pred[pred_temp_idx]["incident_type"] in gold[gold_temp_idx][
-            "incident_type"]:  # attach vs attach / bombing
+        if (
+            gold_temp_idx != -1
+            and pred[pred_temp_idx]["incident_type"]
+            in gold[gold_temp_idx]["incident_type"]
+        ):  # attach vs attach / bombing
             mapped_temp_pred.append(pred_temp_idx)
             mapped_temp_gold.append(gold_temp_idx)
             pred_temp, gold_temp = pred[pred_temp_idx], gold[gold_temp_idx]
@@ -253,23 +294,41 @@ def score(mapping, pred, gold):
                 for entity_gold in gold_temp[role]:
                     ex_result[role]["r_den"] += 1
 
-    ex_result["micro_avg"]["p_num"] = sum(ex_result[role]["p_num"] for _, role in tag2role.items())
-    ex_result["micro_avg"]["p_den"] = sum(ex_result[role]["p_den"] for _, role in tag2role.items())
-    ex_result["micro_avg"]["r_num"] = sum(ex_result[role]["r_num"] for _, role in tag2role.items())
-    ex_result["micro_avg"]["r_den"] = sum(ex_result[role]["r_den"] for _, role in tag2role.items())
+    ex_result["micro_avg"]["p_num"] = sum(
+        ex_result[role]["p_num"] for _, role in tag2role.items()
+    )
+    ex_result["micro_avg"]["p_den"] = sum(
+        ex_result[role]["p_den"] for _, role in tag2role.items()
+    )
+    ex_result["micro_avg"]["r_num"] = sum(
+        ex_result[role]["r_num"] for _, role in tag2role.items()
+    )
+    ex_result["micro_avg"]["r_den"] = sum(
+        ex_result[role]["r_den"] for _, role in tag2role.items()
+    )
 
     for key in all_keys:
-        ex_result[key]["p"] = 0 if ex_result[key]["p_num"] == 0 else ex_result[key]["p_num"] / float(
-            ex_result[key]["p_den"])
-        ex_result[key]["r"] = 0 if ex_result[key]["r_num"] == 0 else ex_result[key]["r_num"] / float(
-            ex_result[key]["r_den"])
-        ex_result[key]["f1"] = f1(ex_result[key]["p_num"], ex_result[key]["p_den"], ex_result[key]["r_num"],
-                                  ex_result[key]["r_den"])
+        ex_result[key]["p"] = (
+            0
+            if ex_result[key]["p_num"] == 0
+            else ex_result[key]["p_num"] / float(ex_result[key]["p_den"])
+        )
+        ex_result[key]["r"] = (
+            0
+            if ex_result[key]["r_num"] == 0
+            else ex_result[key]["r_num"] / float(ex_result[key]["r_den"])
+        )
+        ex_result[key]["f1"] = f1(
+            ex_result[key]["p_num"],
+            ex_result[key]["p_den"],
+            ex_result[key]["r_num"],
+            ex_result[key]["r_den"],
+        )
 
     return ex_result
 
 
-def eval_tf(preds, golds, docids=[]):
+def eval_tf(preds, golds, docids=[], remove_span_whitespace=False):
     # normalization mention strings
     for docid in preds:
         for idx_temp in range(len(preds[docid])):
@@ -279,7 +338,9 @@ def eval_tf(preds, golds, docids=[]):
                 for idx in range(len(preds[docid][idx_temp][role])):
                     for idy in range(len(preds[docid][idx_temp][role][idx])):
                         preds[docid][idx_temp][role][idx][idy] = normalize_string(
-                            preds[docid][idx_temp][role][idx][idy])
+                            preds[docid][idx_temp][role][idx][idy],
+                            remove_span_whitespace,
+                        )
     for docid in golds:
         for idx_temp in range(len(golds[docid])):
             for role in golds[docid][idx_temp]:
@@ -288,13 +349,23 @@ def eval_tf(preds, golds, docids=[]):
                 for idx in range(len(golds[docid][idx_temp][role])):
                     for idy in range(len(golds[docid][idx_temp][role][idx])):
                         golds[docid][idx_temp][role][idx][idy] = normalize_string(
-                            golds[docid][idx_temp][role][idx][idy])
+                            golds[docid][idx_temp][role][idx][idy],
+                            remove_span_whitespace,
+                        )
 
     # get eval results
     result = OrderedDict()
     all_keys = list(role for _, role in tag2role.items()) + ["micro_avg"]
     for key in all_keys:
-        result[key] = {"p_num": 0, "p_den": 0, "r_num": 0, "r_den": 0, "p": 0, "r": 0, "f1": 0}
+        result[key] = {
+            "p_num": 0,
+            "p_den": 0,
+            "r_num": 0,
+            "r_den": 0,
+            "p": 0,
+            "r": 0,
+            "f1": 0,
+        }
 
     if not docids:
         for docid in golds:
@@ -330,15 +401,36 @@ def eval_tf(preds, golds, docids=[]):
             result[role]["r_den"] += ex_best[role]["r_den"]
 
     # micro average
-    result["micro_avg"]["p_num"] = sum(result[role]["p_num"] for _, role in tag2role.items())
-    result["micro_avg"]["p_den"] = sum(result[role]["p_den"] for _, role in tag2role.items())
-    result["micro_avg"]["r_num"] = sum(result[role]["r_num"] for _, role in tag2role.items())
-    result["micro_avg"]["r_den"] = sum(result[role]["r_den"] for _, role in tag2role.items())
+    result["micro_avg"]["p_num"] = sum(
+        result[role]["p_num"] for _, role in tag2role.items()
+    )
+    result["micro_avg"]["p_den"] = sum(
+        result[role]["p_den"] for _, role in tag2role.items()
+    )
+    result["micro_avg"]["r_num"] = sum(
+        result[role]["r_num"] for _, role in tag2role.items()
+    )
+    result["micro_avg"]["r_den"] = sum(
+        result[role]["r_den"] for _, role in tag2role.items()
+    )
 
     for key in all_keys:
-        result[key]["p"] = 0 if result[key]["p_num"] == 0 else result[key]["p_num"] / float(result[key]["p_den"])
-        result[key]["r"] = 0 if result[key]["r_num"] == 0 else result[key]["r_num"] / float(result[key]["r_den"])
-        result[key]["f1"] = f1(result[key]["p_num"], result[key]["p_den"], result[key]["r_num"], result[key]["r_den"])
+        result[key]["p"] = (
+            0
+            if result[key]["p_num"] == 0
+            else result[key]["p_num"] / float(result[key]["p_den"])
+        )
+        result[key]["r"] = (
+            0
+            if result[key]["r_num"] == 0
+            else result[key]["r_num"] / float(result[key]["r_den"])
+        )
+        result[key]["f1"] = f1(
+            result[key]["p_num"],
+            result[key]["p_den"],
+            result[key]["r_num"],
+            result[key]["r_den"],
+        )
 
     return result
 
@@ -347,19 +439,17 @@ def convert_docid(docid: str) -> str:
     return str(int(docid.split("-")[0][-1]) * 10000 + int(docid.split("-")[-1]))
 
 
-def read_gold_templates(file_path: str,
-                        convert_doc_id: bool = True,
-                        sanitize_special_chars: bool = False) -> OrderedDict:
+def read_gold_templates(
+    file_path: str, convert_doc_id: bool = True, sanitize_special_chars: bool = False
+) -> OrderedDict:
     def _sanitize_special_char(raw_str: str) -> str:
         return (
-            raw_str
-            .replace('\'', '')
-            .replace('"', '')
-            .replace('\\', '')
-            .replace('-', '')
+            raw_str.replace("'", "").replace('"', "").replace("\\", "").replace("-", "")
         )
 
-    process_mention_str = _sanitize_special_char if sanitize_special_chars else lambda x: x
+    process_mention_str = (
+        _sanitize_special_char if sanitize_special_chars else lambda x: x
+    )
     golds = OrderedDict()
     with open(file_path, encoding="utf-8") as f:
         for line in f:
@@ -382,7 +472,9 @@ def read_gold_templates(file_path: str,
                         for entity_raw in value:
                             entity = []
                             for mention_offset_pair in entity_raw:
-                                entity.append(process_mention_str(mention_offset_pair[0]))
+                                entity.append(
+                                    process_mention_str(mention_offset_pair[0])
+                                )
                             if entity:
                                 template[role].append(entity)
                 if template not in templates:
@@ -397,6 +489,10 @@ def load_pred_file(file_path: str) -> OrderedDict:
     with open(file_path, encoding="utf-8") as f:
         out_dict = json.load(f)
         for docid in out_dict:
+            pred_templates = out_dict[docid]["pred_templates"]
+            for t in pred_templates:
+                if t["incident_type"] == "ki":
+                    t["incident_type"] = "kidnapping"
             preds[docid] = out_dict[docid]["pred_templates"]
 
     return preds
@@ -407,7 +503,10 @@ def load_gold_file(file_path: str) -> OrderedDict:
     with open(file_path, encoding="utf-8") as f:
         for line in f:
             line = json.loads(line)
-            docid = str(int(line["docid"].split("-")[0][-1]) * 10000 + int(line["docid"].split("-")[-1]))
+            docid = str(
+                int(line["docid"].split("-")[0][-1]) * 10000
+                + int(line["docid"].split("-")[-1])
+            )
             templates_raw = line["templates"]
             templates = []
             for template_raw in templates_raw:
