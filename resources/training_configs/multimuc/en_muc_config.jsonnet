@@ -10,7 +10,6 @@ local definition_path = "resources/data/muc/definitions.json";
 local vocabulary_path = "resources/data/muc/vocabulary";
 
 # Gold data for training and evaluation
-# local train_data_path = "resources/data/muc/en/tokenized-merged/train.json";
 local train_data_path = "resources/data/muc/en/tokenized/train.json";
 local dev_data_path = "resources/data/muc/en/sf-outputs/dev.json";
 local test_data_path = "resources/data/muc/en/sf-outputs/test.json";
