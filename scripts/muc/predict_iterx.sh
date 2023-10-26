@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=brtx6
+#SBATCH --partition=brtx6-ir
 #SBATCH --gpus=1
 #SBATCH --time=24:0:0
 
@@ -24,9 +24,9 @@ LANG_KEYS[ru]=rus
 LANG_KEYS[zh]=zho
 
 export INPUT_FILE=${LANG_KEYS[$LANG]}_test_run1.agg.filtered.json
-export INPUT_PATH=/brtx/601-nvme1/wgantt/multimuc/data/annotations/$LANG/json/sf-outputs/$SETTING/$LANG/$INPUT_FILE
+export INPUT_PATH=/brtx/601-nvme1/wgantt/multimuc/data/annotations/$LANG/json/sf-outputs/mono_corrected/$LANG/$INPUT_FILE
 export REF_PATH=/brtx/601-nvme1/wgantt/multimuc/data/annotations/$LANG/json/untokenized/$INPUT_FILE
-export OUTPUT_PATH=$MODEL_ARCHIVE/$INPUT_FILE
+export OUTPUT_PATH=$MODEL_ARCHIVE/${LANG_KEYS[$LANG]}_test_run1.agg.filtered.v3.json
 
 conda activate sf-dev
 PYTHONPATH=./src allennlp predict \

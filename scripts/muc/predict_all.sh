@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SETTINGS=(bi mono_corrected mono_uncorrected)
+SETTINGS=(mono_uncorrected mono_corrected bi)
 LANGS=(ar fa ko ru zh)
 
 CHECKPOINTS_DIR=/brtx/604-nvme2/wgantt/better/checkpoints/multimuc/iterx/
@@ -9,7 +9,7 @@ CHECKPOINTS_DIR=/brtx/604-nvme2/wgantt/better/checkpoints/multimuc/iterx/
 for lang in ${LANGS[@]}; do
 	for setting in ${SETTINGS[@]}; do
 		sbatch scripts/muc/predict_iterx.sh \
-		$CHECKPOINTS_DIR/$setting/$lang-mt5-large \
+		$CHECKPOINTS_DIR/$setting/$lang \
 		$lang \
 		$setting
   done

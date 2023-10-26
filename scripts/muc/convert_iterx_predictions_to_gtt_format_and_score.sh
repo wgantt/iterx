@@ -26,7 +26,7 @@ for lang in "${LANGS[@]}"; do
     mkdir -p $OUTPUT_DIR/$setting/$lang
 	cd $ITERX_DIR
 	PYTHONPATH=./src python scripts/muc/convert_iterx_predictions_to_gtt_templates.py \
-	  $CHECKPOINTS_DIR/$setting/$lang/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json \
+	  $CHECKPOINTS_DIR/$setting/$lang/${LANG_KEYS[$lang]}_test_run1.agg.filtered.v2.json \
 	  $ANNOTATIONS_DIR/$lang/json/untokenized/${LANG_KEYS[$lang]}_test_run1.agg.filtered.json \
 	  $OUTPUT_DIR/$setting/$lang/preds_iterx.out
 	echo '-----------------------'
